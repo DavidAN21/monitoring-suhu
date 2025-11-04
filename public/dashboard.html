@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Monitoring Suhu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fafafa;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 240px;
+            width: 100%;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+        
+        .metric-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(229, 231, 235, 0.8);
+            background: white;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+        }
+        
+        .nav-blur {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+        }
+        
+        .category-indicator {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+        
+        .stat-card {
+            background: white;
+            border: 1px solid rgba(229, 231, 235, 0.8);
+            transition: all 0.2s ease;
+        }
+        
+        .stat-card:hover {
+            border-color: rgba(156, 163, 175, 0.4);
+        }
+        
+        .sidebar {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #c5c5c5;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="nav-blur text-gray-800 sticky top-0 z-10">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-3">
+                    <button id="menuBtn" class="md:hidden text-gray-600">
+                        <i class="fas fa-bars text-lg"></i>
+                    </button>
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2 bg-gray-100 rounded-lg">
+                            <i class="fas fa-wind text-gray-700"></i>
+                        </div>
+                        <div class="text-xl font-semibold text-gray-800">AirMonitor</div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="refreshDashboard()" class="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition duration-200">
+                        <i class="fas fa-sync-alt text-sm"></i>
+                    </button>
+                    <span id="userWelcome" class="hidden md:block text-sm text-gray-600">Welcome, </span>
+                    <button id="logoutBtn" class="text-gray-100 px-4 py-2 bg-red-600 rounded-lg font-medium hover:bg-red-800 hover:text-gray-400 transition duration-200 flex items-center space-x-2">
+                        <i class="fas fa-sign-out-alt text-sm"></i>
+                        <span class="text-sm">Logout</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Sidebar -->
+    <div id="sidebar" class="sidebar fixed inset-y-0 left-0 z-20 w-64 bg-white shadow-lg md:hidden">
+        <div class="p-4 border-b border-gray-100">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-gray-100 rounded-lg">
+                    <i class="fas fa-wind text-gray-700"></i>
+                </div>
+                <div class="text-lg font-semibold text-gray-800">AirMonitor</div>
+            </div>
+        </div>
+        <div class="p-4">
+            <div class="mb-6">
+                <div class="text-xs text-gray-500 mb-2 font-medium">NAVIGATION</div>
+                <div class="space-y-1">
+                    <a href="#" class="flex items-center space-x-3 p-3 rounded-lg bg-gray-100 text-gray-800">
+                        <i class="fas fa-tachometer-alt text-gray-500"></i>
+                        <span class="font-medium">Dashboard</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 p-3 rounded-lg text-gray-600 hover:bg-gray-50">
+                        <i class="fas fa-history text-gray-400"></i>
+                        <span>History</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 p-3 rounded-lg text-gray-600 hover:bg-gray-50">
+                        <i class="fas fa-cog text-gray-400"></i>
+                        <span>Settings</span>
+                    </a>
+                </div>
+            </div>
+            <div>
+                <div class="text-xs text-gray-500 mb-2 font-medium">ACCOUNT</div>
+                <div class="space-y-1">
+                    <div class="flex items-center space-x-3 p-3 rounded-lg text-gray-600">
+                        <i class="fas fa-user text-gray-400"></i>
+                        <span id="mobileUserWelcome">Welcome, </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-6">
+        <div class="mb-6">
+            <h1 class="text-2xl font-semibold text-gray-800">Environment Dashboard</h1>
+            <p class="text-gray-500 text-sm mt-1">Real-time monitoring of air quality and environmental conditions</p>
+        </div>
+        
+        <!-- Real-time Data Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+            <!-- Suhu Card -->
+            <div class="metric-card rounded-xl p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-gray-500 text-xs font-medium uppercase tracking-wider">TEMPERATURE</h3>
+                        <p id="temperatureValue" class="text-2xl font-semibold text-gray-800 mt-2">-- °C</p>
+                    </div>
+                    <div class="p-3 bg-red-50 rounded-xl">
+                        <i class="fas fa-thermometer-half text-red-400 text-lg"></i>
+                    </div>
+                </div>
+                <div class="flex items-center mt-4 text-xs text-gray-400">
+                    <i class="fas fa-clock mr-2"></i>
+                    <span>Updated: <span id="lastUpdateTemp">--</span></span>
+                </div>
+            </div>
+
+            <!-- Kelembapan Card -->
+            <div class="metric-card rounded-xl p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-gray-500 text-xs font-medium uppercase tracking-wider">HUMIDITY</h3>
+                        <p id="humidityValue" class="text-2xl font-semibold text-gray-800 mt-2">-- %</p>
+                    </div>
+                    <div class="p-3 bg-blue-50 rounded-xl">
+                        <i class="fas fa-tint text-blue-400 text-lg"></i>
+                    </div>
+                </div>
+                <div class="flex items-center mt-4 text-xs text-gray-400">
+                    <i class="fas fa-clock mr-2"></i>
+                    <span>Updated: <span id="lastUpdateHumid">--</span></span>
+                </div>
+            </div>
+
+            <!-- Kualitas Udara Card -->
+            <div class="metric-card rounded-xl p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-gray-500 text-xs font-medium uppercase tracking-wider">AIR QUALITY</h3>
+                        <p id="airQualityValue" class="text-2xl font-semibold text-gray-800 mt-2">--</p>
+                        <p id="airQualityCategory" class="text-xs font-medium mt-1 text-gray-500">--</p>
+                    </div>
+                    <div class="p-3 bg-green-50 rounded-xl">
+                        <i class="fas fa-wind text-green-400 text-lg"></i>
+                    </div>
+                </div>
+                <div class="flex items-center mt-4 text-xs text-gray-400">
+                    <i class="fas fa-clock mr-2"></i>
+                    <span>Updated: <span id="lastUpdateAir">--</span></span>
+                </div>
+            </div>
+
+            <!-- Kategori Udara Card -->
+            <div class="metric-card rounded-xl p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-gray-500 text-xs font-medium uppercase tracking-wider">AIR STATUS</h3>
+                        <p id="kategoriValue" class="text-2xl font-semibold text-gray-800 mt-2">--</p>
+                        <p id="kategoriDescription" class="text-xs font-medium text-gray-500 mt-1">Waiting for data...</p>
+                    </div>
+                    <div class="p-3 bg-purple-50 rounded-xl" id="kategoriIcon">
+                        <i class="fas fa-wind text-purple-400 text-lg"></i>
+                    </div>
+                </div>
+                <div class="flex items-center mt-4 text-xs text-gray-400">
+                    <i class="fas fa-clock mr-2"></i>
+                    <span>Updated: <span id="lastKategoriUpdate">--</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-8">
+            <div class="glass-card rounded-xl p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-semibold text-gray-700">Temperature History</h3>
+                    <i class="fas fa-thermometer-half text-gray-400"></i>
+                </div>
+                <div class="chart-container">
+                    <canvas id="temperatureChart"></canvas>
+                </div>
+            </div>
+            <div class="glass-card rounded-xl p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-semibold text-gray-700">Humidity History</h3>
+                    <i class="fas fa-tint text-gray-400"></i>
+                </div>
+                <div class="chart-container">
+                    <canvas id="humidityChart"></canvas>
+                </div>
+            </div>
+            <div class="glass-card rounded-xl p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-semibold text-gray-700">Air Quality History</h3>
+                    <i class="fas fa-wind text-gray-400"></i>
+                </div>
+                <div class="chart-container">
+                    <canvas id="airQualityChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="glass-card rounded-xl p-5 mb-6">
+            <div class="flex items-center justify-between mb-5">
+                <h3 class="text-sm font-semibold text-gray-700">24-Hour Statistics</h3>
+                <i class="fas fa-chart-bar text-gray-400"></i>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4" id="statsContainer">
+                <div class="stat-card text-center p-4 rounded-lg">
+                    <div class="text-xl font-semibold text-gray-700">-- °C</div>
+                    <div class="text-xs text-gray-500 mt-1">Avg Temp</div>
+                </div>
+                <div class="stat-card text-center p-4 rounded-lg">
+                    <div class="text-xl font-semibold text-gray-700">-- %</div>
+                    <div class="text-xs text-gray-500 mt-1">Avg Humidity</div>
+                </div>
+                <div class="stat-card text-center p-4 rounded-lg">
+                    <div class="text-xl font-semibold text-gray-700">--</div>
+                    <div class="text-xs text-gray-500 mt-1">Avg Air Quality</div>
+                </div>
+                <div class="stat-card text-center p-4 rounded-lg">
+                    <div class="text-xl font-semibold text-gray-700">-- °C</div>
+                    <div class="text-xs text-gray-500 mt-1">Max Temp</div>
+                </div>
+                <div class="stat-card text-center p-4 rounded-lg">
+                    <div class="text-xl font-semibold text-gray-700">-- °C</div>
+                    <div class="text-xs text-gray-500 mt-1">Min Temp</div>
+                </div>
+                <div class="stat-card text-center p-4 rounded-lg">
+                    <div class="text-xl font-semibold text-gray-700">--</div>
+                    <div class="text-xs text-gray-500 mt-1">Max Air Quality</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kategori Kualitas Udara -->
+        <div class="glass-card rounded-xl p-5 mb-6">
+            <div class="flex items-center justify-between mb-5">
+                <h3 class="text-sm font-semibold text-gray-700">Air Quality Categories</h3>
+                <i class="fas fa-info-circle text-gray-400"></i>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white border border-gray-200 rounded-xl p-4 text-center transition-all hover:shadow-sm">
+                    <div class="w-3 h-3 bg-green-400 rounded-full mx-auto mb-3"></div>
+                    <div class="text-sm font-semibold text-gray-700">Good</div>
+                    <div class="text-xs text-gray-500 mt-1">0 - 400 pts</div>
+                </div>
+                <div class="bg-white border border-gray-200 rounded-xl p-4 text-center transition-all hover:shadow-sm">
+                    <div class="w-3 h-3 bg-yellow-400 rounded-full mx-auto mb-3"></div>
+                    <div class="text-sm font-semibold text-gray-700">Moderate</div>
+                    <div class="text-xs text-gray-500 mt-1">401 - 600 pts</div>
+                </div>
+                <div class="bg-white border border-gray-200 rounded-xl p-4 text-center transition-all hover:shadow-sm">
+                    <div class="w-3 h-3 bg-orange-400 rounded-full mx-auto mb-3"></div>
+                    <div class="text-sm font-semibold text-gray-700">High</div>
+                    <div class="text-xs text-gray-500 mt-1">601 - 800 pts</div>
+                </div>
+                <div class="bg-white border border-gray-200 rounded-xl p-4 text-center transition-all hover:shadow-sm">
+                    <div class="w-3 h-3 bg-red-400 rounded-full mx-auto mb-3"></div>
+                    <div class="text-sm font-semibold text-gray-700">Dangerous</div>
+                    <div class="text-xs text-gray-500 mt-1">801+ pts</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="text-center py-8">
+            <div class="inline-flex items-center px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-200">
+                <i class="fas fa-spinner fa-spin text-gray-400 mr-2"></i>
+                <p class="text-gray-500 text-sm">Loading sensor data...</p>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="error" class="hidden text-center py-8">
+            <div class="inline-block bg-white rounded-xl shadow-sm border border-gray-200 p-6 max-w-md">
+                <i class="fas fa-exclamation-triangle text-gray-400 text-2xl mb-4"></i>
+                <p class="text-gray-600 text-sm mb-4">Failed to load data. Please check sensor connection.</p>
+                <button onclick="loadData()" class="bg-gray-800 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-700 transition duration-200 flex items-center space-x-2 mx-auto text-sm">
+                    <i class="fas fa-redo text-xs"></i>
+                    <span>Try Again</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 py-4 mt-8">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm">AirMonitor &copy; 2023 - Environmental Monitoring System</p>
+        </div>
+    </footer>
+
+    <script>
+        let temperatureChart, humidityChart, airQualityChart;
+        let updateInterval;
+
+        // Check authentication
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login';
+        } else {
+            // Tampilkan username
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            document.getElementById('userWelcome').textContent += user.username;
+            document.getElementById('userWelcome').classList.remove('hidden');
+            document.getElementById('mobileUserWelcome').textContent += user.username;
+            
+            // Load initial data
+            loadData();
+            loadHistory();
+            loadStats();
+            
+            // Setup auto refresh setiap 5 detik
+            updateInterval = setInterval(() => {
+                loadData();
+            }, 5000);
+        }
+
+        // Mobile menu toggle
+        document.getElementById('menuBtn').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('open');
+        });
+
+        // Logout function
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            if (updateInterval) clearInterval(updateInterval);
+            window.location.href = '/login';
+        });
+
+        // Load real-time data
+        async function loadData() {
+            try {
+                console.log('🔄 Loading sensor data...');
+                const response = await fetch('/api/sensor-data/latest', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('Response status:', response.status);
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('Data received:', result);
+                    updateDashboard(result.data);
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('error').classList.add('hidden');
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('error').classList.remove('hidden');
+            }
+        }
+
+        // Update dashboard dengan data terbaru
+        function updateDashboard(data) {
+            if (!data) {
+                console.log('No data available');
+                return;
+            }
+
+            const now = new Date().toLocaleTimeString('id-ID');
+            
+            console.log('Updating dashboard with:', data);
+            
+            // Update temperature
+            if (data.temperature !== undefined && data.temperature !== null) {
+                document.getElementById('temperatureValue').textContent = `${data.temperature.toFixed(1)} °C`;
+                document.getElementById('lastUpdateTemp').textContent = now;
+            }
+            
+            // Update humidity
+            if (data.humidity !== undefined && data.humidity !== null) {
+                document.getElementById('humidityValue').textContent = `${data.humidity.toFixed(1)} %`;
+                document.getElementById('lastUpdateHumid').textContent = now;
+            }
+            
+            // Update air quality
+            if (data.air_quality !== undefined && data.air_quality !== null) {
+                document.getElementById('airQualityValue').textContent = data.air_quality;
+                document.getElementById('airQualityCategory').textContent = data.category || '--';
+                document.getElementById('lastUpdateAir').textContent = now;
+
+                // UPDATE KATEGORI CARD
+                updateKategoriCard(data.air_quality, data.category);
+            }
+        }
+
+        // Update kategori card
+        function updateKategoriCard(airQuality, category) {
+            const kategoriValue = document.getElementById('kategoriValue');
+            const kategoriDescription = document.getElementById('kategoriDescription');
+            const kategoriIcon = document.getElementById('kategoriIcon');
+            const lastKategoriUpdate = document.getElementById('lastKategoriUpdate');
+
+            const now = new Date().toLocaleTimeString('id-ID');
+            
+            // Tentukan warna berdasarkan kategori
+            let textColor, iconClass, description, bgColor;
+            
+            if (airQuality <= 400) {
+                // Bersih
+                textColor = 'text-green-500';
+                iconClass = 'fas fa-check-circle';
+                description = 'Good Air Quality';
+                bgColor = 'bg-green-50';
+            } else if (airQuality <= 600) {
+                // Sedang
+                textColor = 'text-yellow-500';
+                iconClass = 'fas fa-exclamation-triangle';
+                description = 'Moderate Air Quality';
+                bgColor = 'bg-yellow-50';
+            } else if (airQuality <= 800) {
+                // Tinggi
+                textColor = 'text-orange-500';
+                iconClass = 'fas fa-exclamation-circle';
+                description = 'High Pollution';
+                bgColor = 'bg-orange-50';
+            } else {
+                // Bahaya
+                textColor = 'text-red-500';
+                iconClass = 'fas fa-skull-crossbones';
+                description = 'Dangerous Levels';
+                bgColor = 'bg-red-50';
+            }
+
+            // Update content
+            kategoriValue.textContent = category || '--';
+            kategoriValue.className = `text-2xl font-semibold ${textColor}`;
+            kategoriDescription.textContent = description;
+            kategoriDescription.className = `text-xs font-medium ${textColor}`;
+            kategoriIcon.innerHTML = `<i class="${iconClass} ${textColor} text-lg"></i>`;
+            kategoriIcon.className = `p-3 ${bgColor} rounded-xl`;
+            lastKategoriUpdate.textContent = now;
+        }
+
+        // Load history data untuk charts
+        async function loadHistory() {
+            try {
+                console.log('📊 Loading history data...');
+                const response = await fetch('/api/sensor-data/history?limit=20', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('History data:', result);
+                    updateCharts(result.data);
+                } else {
+                    console.error('History load failed:', response.status);
+                    // Jika gagal, gunakan data dummy untuk demo
+                    useDemoData();
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+                // Jika error, gunakan data dummy untuk demo
+                useDemoData();
+            }
+        }
+
+        // Data demo untuk chart
+        function useDemoData() {
+            // Data suhu (dalam °C)
+            const temperatureData = [32.0, 31.5, 31.0, 30.5, 30.0, 29.5, 29.0, 28.5];
+            
+            // Data kelembapan (dalam %)
+            const humidityData = [65, 68, 70, 72, 75, 78, 80, 82];
+            
+            // Data kualitas udara (dalam pts)
+            const airQualityData = [150, 180, 220, 280, 350, 420, 500, 380];
+            
+            // Label waktu
+            const timeLabels = [];
+            const now = new Date();
+            for (let i = 7; i >= 0; i--) {
+                const time = new Date(now.getTime() - i * 30 * 60000);
+                timeLabels.push(time.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }));
+            }
+            
+            // Update charts dengan data demo
+            updateCharts({
+                temperatures: temperatureData,
+                humidities: humidityData,
+                airQualities: airQualityData,
+                labels: timeLabels
+            });
+        }
+
+        // Update charts
+        function updateCharts(chartData) {
+            let temperatures, humidities, airQualities, labels;
+            
+            // Cek apakah data berasal dari API atau data demo
+            if (Array.isArray(chartData)) {
+                // Data dari API
+                const reversedData = [...chartData].reverse();
+                labels = reversedData.map(item => 
+                    new Date(item.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+                );
+                temperatures = reversedData.map(item => item.temperature);
+                humidities = reversedData.map(item => item.humidity);
+                airQualities = reversedData.map(item => item.air_quality);
+            } else {
+                // Data demo
+                temperatures = chartData.temperatures;
+                humidities = chartData.humidities;
+                airQualities = chartData.airQualities;
+                labels = chartData.labels;
+            }
+
+            console.log('Chart data - Labels:', labels);
+            console.log('Chart data - Temperatures:', temperatures);
+            console.log('Chart data - Humidities:', humidities);
+            console.log('Chart data - Air Qualities:', airQualities);
+
+            // Temperature Chart
+            const tempCtx = document.getElementById('temperatureChart').getContext('2d');
+            if (temperatureChart) {
+                temperatureChart.destroy();
+            }
+            temperatureChart = new Chart(tempCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Temperature (°C)',
+                        data: temperatures,
+                        borderColor: 'rgba(239, 68, 68, 0.7)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.05)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: 'rgb(239, 68, 68)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 1.5,
+                        pointRadius: 3,
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.03)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '°C';
+                                },
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            titleColor: '#374151',
+                            bodyColor: '#374151',
+                            borderColor: 'rgba(229, 231, 235, 0.8)',
+                            borderWidth: 1,
+                            titleFont: {
+                                size: 12
+                            },
+                            bodyFont: {
+                                size: 13
+                            },
+                            callbacks: {
+                                label: function(context) {
+                                    return `Temperature: ${context.parsed.y}°C`;
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+
+            // Humidity Chart
+            const humidCtx = document.getElementById('humidityChart').getContext('2d');
+            if (humidityChart) {
+                humidityChart.destroy();
+            }
+            humidityChart = new Chart(humidCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Humidity (%)',
+                        data: humidities,
+                        borderColor: 'rgba(59, 130, 246, 0.7)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: 'rgb(59, 130, 246)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 1.5,
+                        pointRadius: 3,
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            min: 0,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.03)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                },
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            titleColor: '#374151',
+                            bodyColor: '#374151',
+                            borderColor: 'rgba(229, 231, 235, 0.8)',
+                            borderWidth: 1,
+                            titleFont: {
+                                size: 12
+                            },
+                            bodyFont: {
+                                size: 13
+                            },
+                            callbacks: {
+                                label: function(context) {
+                                    return `Humidity: ${context.parsed.y}%`;
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+
+            // Air Quality Chart
+            const airCtx = document.getElementById('airQualityChart').getContext('2d');
+            if (airQualityChart) {
+                airQualityChart.destroy();
+            }
+            airQualityChart = new Chart(airCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Air Quality (pts)',
+                        data: airQualities,
+                        borderColor: 'rgba(34, 197, 94, 0.7)',
+                        backgroundColor: 'rgba(34, 197, 94, 0.05)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: 'rgb(34, 197, 94)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 1.5,
+                        pointRadius: 3,
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            suggestedMax: 1000,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.03)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + ' pts';
+                                },
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            titleColor: '#374151',
+                            bodyColor: '#374151',
+                            borderColor: 'rgba(229, 231, 235, 0.8)',
+                            borderWidth: 1,
+                            titleFont: {
+                                size: 12
+                            },
+                            bodyFont: {
+                                size: 13
+                            },
+                            callbacks: {
+                                label: function(context) {
+                                    return `Air Quality: ${context.parsed.y} pts`;
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+        }
+
+        // Load statistics
+        async function loadStats() {
+            try {
+                console.log('📈 Loading statistics...');
+                const response = await fetch('/api/sensor-data/stats', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('Stats data:', result);
+                    updateStats(result.stats);
+                } else {
+                    // Jika gagal, gunakan statistik dari data demo
+                    useDemoStats();
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                // Jika error, gunakan statistik dari data demo
+                useDemoStats();
+            }
+        }
+
+        // Statistik demo
+        function useDemoStats() {
+            const demoStats = {
+                avgTemperature: 30.4,
+                avgHumidity: 72.5,
+                avgAirQuality: 310,
+                maxTemperature: 32.0,
+                minTemperature: 28.5,
+                maxAirQuality: 500
+            };
+            updateStats(demoStats);
+        }
+
+        // Update statistics display
+        function updateStats(stats) {
+            const statsContainer = document.getElementById('statsContainer');
+            
+            if (!stats || Object.keys(stats).length === 0) {
+                console.log('No stats data available');
+                return;
+            }
+
+            console.log('Updating stats with:', stats);
+            
+            const statsData = [
+                { 
+                    label: 'Avg Temp', 
+                    value: stats.avgTemperature ? `${stats.avgTemperature.toFixed(1)} °C` : '--' 
+                },
+                { 
+                    label: 'Avg Humidity', 
+                    value: stats.avgHumidity ? `${stats.avgHumidity.toFixed(1)} %` : '--' 
+                },
+                { 
+                    label: 'Avg Air Quality',
+                    value: stats.avgAirQuality ? `${Number(stats.avgAirQuality).toFixed(0)}` : '--'
+                },
+                { 
+                    label: 'Max Temp', 
+                    value: stats.maxTemperature ? `${stats.maxTemperature.toFixed(1)} °C` : '--' 
+                },
+                { 
+                    label: 'Min Temp', 
+                    value: stats.minTemperature ? `${stats.minTemperature.toFixed(1)} °C` : '--' 
+                },
+                { 
+                    label: 'Max Air Quality',
+                    value: stats.maxAirQuality ? `${Number(stats.maxAirQuality).toFixed(0)}` : '--'
+                }
+            ];
+
+            statsContainer.innerHTML = statsData.map(stat => `
+                <div class="stat-card text-center p-4 rounded-lg">
+                    <div class="text-xl font-semibold text-gray-700">${stat.value}</div>
+                    <div class="text-xs text-gray-500 mt-1">${stat.label}</div>
+                </div>
+            `).join('');
+        }
+
+        // Manual refresh function
+        window.refreshDashboard = function() {
+            loadData();
+            loadHistory();
+            loadStats();
+        }
+
+        // Fix layout on resize
+        window.addEventListener('resize', function() {
+            if (temperatureChart) temperatureChart.resize();
+            if (humidityChart) humidityChart.resize();
+            if (airQualityChart) airQualityChart.resize();
+        });
+
+        // Initialize demo data on load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load demo data jika API tidak tersedia
+            setTimeout(() => {
+                if (document.getElementById('loading').classList.contains('hidden') === false) {
+                    useDemoData();
+                    useDemoStats();
+                    document.getElementById('loading').classList.add('hidden');
+                    
+                    // Update dashboard dengan data demo
+                    updateDashboard({
+                        temperature: 30.5,
+                        humidity: 72,
+                        air_quality: 310,
+                        category: 'Good'
+                    });
+                }
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
