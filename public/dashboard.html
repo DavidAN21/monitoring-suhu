@@ -12,7 +12,7 @@
         
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #fafafa;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
         }
         
         .chart-container {
@@ -31,12 +31,30 @@
         .metric-card {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border: 1px solid rgba(229, 231, 235, 0.8);
-            background: white;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .metric-card:hover::before {
+            transform: scaleX(1);
         }
         
         .metric-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
         
         .nav-blur {
@@ -45,34 +63,47 @@
             border-bottom: 1px solid rgba(229, 231, 235, 0.8);
         }
         
-        .category-indicator {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 6px;
-        }
-        
-        .stat-card {
-            background: white;
-            border: 1px solid rgba(229, 231, 235, 0.8);
-            transition: all 0.2s ease;
-        }
-        
-        .stat-card:hover {
-            border-color: rgba(156, 163, 175, 0.4);
-        }
-        
         .sidebar {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 40;
+            background: linear-gradient(180deg, #1e293b 0%, #334155 100%);
+            color: white;
+        }
+        
+        .sidebar.collapsed {
+            width: 70px;
+        }
+        
+        .sidebar.collapsed .sidebar-item-text,
+        .sidebar.collapsed .sidebar-header-text,
+        .sidebar.collapsed .sidebar-section-text {
+            opacity: 0;
+            visibility: hidden;
+            width: 0;
+        }
+        
+        .sidebar.collapsed .sidebar-item {
+            justify-content: center;
+        }
+        
+        .main-content {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-left: 256px;
+        }
+        
+        .main-content.expanded {
+            margin-left: 70px;
         }
         
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
             }
-            .sidebar.open {
+            .sidebar.mobile-open {
                 transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0 !important;
             }
         }
         
@@ -94,30 +125,175 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #a8a8a8;
         }
+        
+        .category-indicator {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+        
+        .stat-card {
+            background: white;
+            border: 1px solid rgba(229, 231, 235, 0.8);
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        }
+        
+        .stat-card:hover {
+            border-color: rgba(156, 163, 175, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sidebar-item {
+            transition: all 0.2s ease;
+            border-radius: 8px;
+            margin: 0 8px;
+        }
+        
+        .sidebar-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar-item.active {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .pulse-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #10b981;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+            
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+            }
+            
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="min-h-screen">
+    <!-- Desktop Sidebar -->
+    <div id="desktopSidebar" class="sidebar fixed inset-y-0 left-0 w-64 shadow-lg hidden md:flex flex-col">
+        <!-- Header -->
+        <div class="p-4 border-b border-gray-700">
+            <div class="flex items-center space-x-3 sidebar-header">
+                <div class="p-2 bg-gray-700 rounded-lg">
+                    <i class="fas fa-wind text-blue-300"></i>
+                </div>
+                <div class="sidebar-header-text text-lg font-semibold text-white">AirMonitor</div>
+            </div>
+        </div>
+        
+        <!-- Navigation Items -->
+        <div class="flex-1 py-4">
+            <div class="mb-6">
+                <div class="sidebar-section-text text-xs text-gray-400 mb-2 font-medium px-4">NAVIGATION</div>
+                <div class="space-y-1 px-3">
+                    <a href="dashboard.html" class="sidebar-item flex items-center p-3 rounded-lg bg-gray-700 text-white active">
+                        <i class="fas fa-tachometer-alt text-blue-300 w-5 text-center"></i>
+                        <span class="sidebar-item-text font-medium">Dashboard</span>
+                    </a>
+                    <a href="settings.html" class="sidebar-item flex items-center p-3 rounded-lg text-gray-300 hover:text-white">
+                        <i class="fas fa-cog text-gray-400 w-5 text-center"></i>
+                        <span class="sidebar-item-text">Settings</span>
+                    </a>
+                </div>
+            </div>
+            <div>
+                <div class="sidebar-section-text text-xs text-gray-400 mb-2 font-medium px-4">ACCOUNT</div>
+                <div class="space-y-1 px-3">
+                    <a href="profile.html" class="sidebar-item flex items-center p-3 rounded-lg text-gray-300 hover:text-white">
+                        <i class="fas fa-user text-gray-400 w-5 text-center"></i>
+                        <span class="sidebar-item-text">Profile</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Toggle Button -->
+        <div class="p-4 border-t border-gray-700">
+            <button id="toggleSidebar" class="sidebar-item flex items-center p-3 rounded-lg text-gray-300 hover:text-white w-full">
+                <i class="fas fa-chevron-left text-gray-400 w-5 text-center"></i>
+                <span class="sidebar-item-text font-medium">Minimize</span>
+            </button>
+        </div>
+    </div>
+
     <!-- Navigation -->
-    <nav class="nav-blur text-gray-800 sticky top-0 z-10">
+    <nav class="nav-blur text-gray-800 sticky top-0 z-30">
         <div class="container mx-auto px-4">
             <div class="flex justify-between items-center py-4">
                 <div class="flex items-center space-x-3">
-                    <button id="menuBtn" class="md:hidden text-gray-600">
+                    <button id="mobileMenuBtn" class="md:hidden text-gray-600">
                         <i class="fas fa-bars text-lg"></i>
                     </button>
-                    <div class="flex items-center space-x-3">
-                        <div class="p-2 bg-gray-100 rounded-lg">
-                            <i class="fas fa-wind text-gray-700"></i>
-                        </div>
-                        <div class="text-xl font-semibold text-gray-800">AirMonitor</div>
+                    <div class="flex px-1 md:px-12 lg:px-12 items-center space-x-3">
+                        <div class="text-sm md:text-lg lg:text-lg font-semibold text-gray-800">AirMonitor</div>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <button onclick="refreshDashboard()" class="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition duration-200">
+                    <button onclick="refreshDashboard()" class="p-2 rounded-lg bg-blue-50 text-blue-500 hover:bg-blue-100 transition duration-200">
                         <i class="fas fa-sync-alt text-sm"></i>
                     </button>
-                    <span id="userWelcome" class="hidden md:block text-sm text-gray-600">Welcome, </span>
-                    <button id="logoutBtn" class="text-gray-100 px-4 py-2 bg-red-600 rounded-lg font-medium hover:bg-red-800 hover:text-gray-400 transition duration-200 flex items-center space-x-2">
+                        <span id="userWelcome" class="user-welcome text-sm text-gray-600">
+                            Welcome,
+                        </span>
+
+                        <style>
+                        /* sembunyikan di mobile (<=767px) */
+                        @media (max-width: 667px) {
+                            .user-welcome { display: none !important; }
+                        }
+                        /* tampilkan di >=768px */
+                        @media (min-width: 668px) {
+                            .user-welcome { display: inline; }
+                        }
+                        </style>
+                    <button id="logoutBtn" class="text-white px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 rounded-lg font-medium hover:from-red-600 hover:to-red-700 transition duration-200 flex items-center space-x-2 shadow-sm">
                         <i class="fas fa-sign-out-alt text-sm"></i>
                         <span class="text-sm">Logout</span>
                     </button>
@@ -127,251 +303,296 @@
     </nav>
 
     <!-- Mobile Sidebar -->
-    <div id="sidebar" class="sidebar fixed inset-y-0 left-0 z-20 w-64 bg-white shadow-lg md:hidden">
-        <div class="p-4 border-b border-gray-100">
-            <div class="flex items-center space-x-3">
-                <div class="p-2 bg-gray-100 rounded-lg">
-                    <i class="fas fa-wind text-gray-700"></i>
+    <div id="mobileSidebar" class="sidebar fixed inset-y-0 left-0 w-64 bg-gradient-to-b from-gray-800 to-gray-900 shadow-lg md:hidden flex flex-col">
+        <div class="p-4 border-b border-gray-700">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-gray-700 rounded-lg">
+                        <i class="fas fa-wind text-blue-300"></i>
+                    </div>
+                    <div class="text-lg font-semibold text-white">AirMonitor</div>
                 </div>
-                <div class="text-lg font-semibold text-gray-800">AirMonitor</div>
+                <button id="closeMobileMenu" class="text-gray-300 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
         </div>
-        <div class="p-4">
+        <div class="flex-1 overflow-y-auto py-4">
             <div class="mb-6">
-                <div class="text-xs text-gray-500 mb-2 font-medium">NAVIGATION</div>
-                <div class="space-y-1">
-                    <a href="#" class="flex items-center space-x-3 p-3 rounded-lg bg-gray-100 text-gray-800">
-                        <i class="fas fa-tachometer-alt text-gray-500"></i>
+                <div class="text-xs text-gray-400 mb-2 font-medium px-4">NAVIGATION</div>
+                <div class="space-y-1 px-3">
+                    <a href="dashboard.html" class="flex items-center space-x-3 p-3 rounded-lg bg-gray-700 text-white">
+                        <i class="fas fa-tachometer-alt text-blue-300"></i>
                         <span class="font-medium">Dashboard</span>
                     </a>
-                    <a href="#" class="flex items-center space-x-3 p-3 rounded-lg text-gray-600 hover:bg-gray-50">
-                        <i class="fas fa-history text-gray-400"></i>
-                        <span>History</span>
-                    </a>
-                    <a href="#" class="flex items-center space-x-3 p-3 rounded-lg text-gray-600 hover:bg-gray-50">
+                    <a href="settings.html" class="flex items-center space-x-3 p-3 rounded-lg text-gray-300 hover:text-white hover:bg-gray-700">
                         <i class="fas fa-cog text-gray-400"></i>
                         <span>Settings</span>
                     </a>
                 </div>
             </div>
             <div>
-                <div class="text-xs text-gray-500 mb-2 font-medium">ACCOUNT</div>
-                <div class="space-y-1">
-                    <div class="flex items-center space-x-3 p-3 rounded-lg text-gray-600">
-                        <i class="fas fa-user text-gray-400"></i>
-                        <span id="mobileUserWelcome">Welcome, </span>
-                    </div>
+                <div class="text-xs text-gray-400 mb-2 font-medium px-4">ACCOUNT</div>
+                <div class="space-y-1 px-3">
+                    <a href="profile.html" class="flex items-center space-x-3 p-3 rounded-lg text-gray-300 hover:text-white hover:bg-gray-700">
+                        <i id="mobileUserWelcome" class="fas fa-user text-gray-400"></i>
+                        <span>Profile</span>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Main Content -->
-    <div class="container mx-auto px-4 py-6">
-        <div class="mb-6">
-            <h1 class="text-2xl font-semibold text-gray-800">Environment Dashboard</h1>
-            <p class="text-gray-500 text-sm mt-1">Real-time monitoring of air quality and environmental conditions</p>
+    <div id="mainContent" class="main-content min-h-screen">
+        <div class="container mx-auto px-4 py-6">
+            <div class="mb-6 fade-in">
+                <h1 class="text-2xl font-bold text-gray-800">Environment Dashboard</h1>
+                <p class="text-gray-500 text-sm mt-1">Real-time monitoring of air quality and environmental conditions</p>
+            </div>
+            
+            <!-- Real-time Data Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-5 mb-8">
+                <!-- Suhu Card -->
+                <div class="metric-card rounded-xl p-5 fade-in">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-gray-500 text-xs font-medium uppercase tracking-wider">TEMPERATURE</h3>
+                            <p id="temperatureValue" class="text-2xl font-bold text-gray-800 mt-2">-- °C</p>
+                        </div>
+                        <div class="p-3 bg-gradient-to-br from-red-50 to-red-100 rounded-xl">
+                            <i class="fas fa-thermometer-half text-red-500 text-lg"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center mt-4 text-xs text-gray-400">
+                        <i class="fas fa-clock mr-2"></i>
+                        <span>Updated: <span id="lastUpdateTemp">--</span></span>
+                    </div>
+                </div>
+
+                <!-- Kelembapan Card -->
+                <div class="metric-card rounded-xl p-5 fade-in">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-gray-500 text-xs font-medium uppercase tracking-wider">HUMIDITY</h3>
+                            <p id="humidityValue" class="text-2xl font-bold text-gray-800 mt-2">-- %</p>
+                        </div>
+                        <div class="p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl">
+                            <i class="fas fa-tint text-blue-500 text-lg"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center mt-4 text-xs text-gray-400">
+                        <i class="fas fa-clock mr-2"></i>
+                        <span>Updated: <span id="lastUpdateHumid">--</span></span>
+                    </div>
+                </div>
+
+                <!-- Kualitas Udara Card -->
+                <div class="metric-card rounded-xl p-5 fade-in">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-gray-500 text-xs font-medium uppercase tracking-wider">AIR QUALITY</h3>
+                            <p id="airQualityValue" class="text-2xl font-bold text-gray-800 mt-2">--</p>
+                            <p id="airQualityCategory" class="text-xs font-medium mt-1 text-gray-500">--</p>
+                        </div>
+                        <div class="p-3 bg-gradient-to-br from-green-50 to-green-100 rounded-xl">
+                            <i class="fas fa-wind text-green-500 text-lg"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center mt-4 text-xs text-gray-400">
+                        <i class="fas fa-clock mr-2"></i>
+                        <span>Updated: <span id="lastUpdateAir">--</span></span>
+                    </div>
+                </div>
+
+                <!-- Kategori Udara Card -->
+                <div class="metric-card rounded-xl p-5 fade-in">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-gray-500 text-xs font-medium uppercase tracking-wider">AIR STATUS</h3>
+                            <p id="kategoriValue" class="text-2xl font-bold text-gray-800 mt-2">--</p>
+                            <p id="kategoriDescription" class="text-xs font-medium text-gray-500 mt-1">Waiting for data...</p>
+                        </div>
+                        <div class="p-3 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl" id="kategoriIcon">
+                            <i class="fas fa-wind text-purple-500 text-lg"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center mt-4 text-xs text-gray-400">
+                        <i class="fas fa-clock mr-2"></i>
+                        <span>Updated: <span id="lastKategoriUpdate">--</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-8">
+                <div class="glass-card rounded-xl p-5 fade-in">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-semibold text-gray-700">Temperature History</h3>
+                        <i class="fas fa-thermometer-half text-red-400"></i>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="temperatureChart"></canvas>
+                    </div>
+                </div>
+                <div class="glass-card rounded-xl p-5 fade-in">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-semibold text-gray-700">Humidity History</h3>
+                        <i class="fas fa-tint text-blue-400"></i>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="humidityChart"></canvas>
+                    </div>
+                </div>
+                <div class="glass-card rounded-xl p-5 fade-in">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-semibold text-gray-700">Air Quality History</h3>
+                        <i class="fas fa-wind text-green-400"></i>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="airQualityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="glass-card rounded-xl p-5 mb-6 fade-in">
+                <div class="flex items-center justify-between mb-5">
+                    <h3 class="text-sm font-semibold text-gray-700">24-Hour Statistics</h3>
+                    <i class="fas fa-chart-bar text-blue-400"></i>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4" id="statsContainer">
+                    <div class="stat-card text-center p-4 rounded-lg">
+                        <div class="text-xl font-bold text-gray-700">-- °C</div>
+                        <div class="text-xs text-gray-500 mt-1">Avg Temp</div>
+                    </div>
+                    <div class="stat-card text-center p-4 rounded-lg">
+                        <div class="text-xl font-bold text-gray-700">-- %</div>
+                        <div class="text-xs text-gray-500 mt-1">Avg Humidity</div>
+                    </div>
+                    <div class="stat-card text-center p-4 rounded-lg">
+                        <div class="text-xl font-bold text-gray-700">--</div>
+                        <div class="text-xs text-gray-500 mt-1">Avg Air Quality</div>
+                    </div>
+                    <div class="stat-card text-center p-4 rounded-lg">
+                        <div class="text-xl font-bold text-gray-700">-- °C</div>
+                        <div class="text-xs text-gray-500 mt-1">Max Temp</div>
+                    </div>
+                    <div class="stat-card text-center p-4 rounded-lg">
+                        <div class="text-xl font-bold text-gray-700">-- °C</div>
+                        <div class="text-xs text-gray-500 mt-1">Min Temp</div>
+                    </div>
+                    <div class="stat-card text-center p-4 rounded-lg">
+                        <div class="text-xl font-bold text-gray-700">--</div>
+                        <div class="text-xs text-gray-500 mt-1">Max Air Quality</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kategori Kualitas Udara -->
+            <div class="glass-card rounded-xl p-5 mb-6 fade-in">
+                <div class="flex items-center justify-between mb-5">
+                    <h3 class="text-sm font-semibold text-gray-700">Air Quality Categories</h3>
+                    <i class="fas fa-info-circle text-blue-400"></i>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white border border-gray-200 rounded-xl p-4 text-center transition-all hover:shadow-sm hover:border-green-300">
+                        <div class="w-3 h-3 bg-green-400 rounded-full mx-auto mb-3"></div>
+                        <div class="text-sm font-semibold text-gray-700">Good</div>
+                        <div class="text-xs text-gray-500 mt-1">0 - 400 pts</div>
+                    </div>
+                    <div class="bg-white border border-gray-200 rounded-xl p-4 text-center transition-all hover:shadow-sm hover:border-yellow-300">
+                        <div class="w-3 h-3 bg-yellow-400 rounded-full mx-auto mb-3"></div>
+                        <div class="text-sm font-semibold text-gray-700">Moderate</div>
+                        <div class="text-xs text-gray-500 mt-1">401 - 600 pts</div>
+                    </div>
+                    <div class="bg-white border border-gray-200 rounded-xl p-4 text-center transition-all hover:shadow-sm hover:border-orange-300">
+                        <div class="w-3 h-3 bg-orange-400 rounded-full mx-auto mb-3"></div>
+                        <div class="text-sm font-semibold text-gray-700">High</div>
+                        <div class="text-xs text-gray-500 mt-1">601 - 800 pts</div>
+                    </div>
+                    <div class="bg-white border border-gray-200 rounded-xl p-4 text-center transition-all hover:shadow-sm hover:border-red-300">
+                        <div class="w-3 h-3 bg-red-400 rounded-full mx-auto mb-3"></div>
+                        <div class="text-sm font-semibold text-gray-700">Dangerous</div>
+                        <div class="text-xs text-gray-500 mt-1">801+ pts</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loading" class="text-center py-8">
+                <div class="inline-flex items-center px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-200">
+                    <i class="fas fa-spinner fa-spin text-blue-500 mr-2"></i>
+                    <p class="text-gray-500 text-sm">Loading sensor data...</p>
+                </div>
+            </div>
+
+            <!-- Error State -->
+            <div id="error" class="hidden text-center py-8">
+                <div class="inline-block bg-white rounded-xl shadow-sm border border-gray-200 p-6 max-w-md">
+                    <i class="fas fa-exclamation-triangle text-red-400 text-2xl mb-4"></i>
+                    <p class="text-gray-600 text-sm mb-4">Failed to load data. Please check sensor connection.</p>
+                    <button onclick="loadData()" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition duration-200 flex items-center space-x-2 mx-auto text-sm shadow-sm">
+                        <i class="fas fa-redo text-xs"></i>
+                        <span>Try Again</span>
+                    </button>
+                </div>
+            </div>
         </div>
-        
-        <!-- Real-time Data Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-            <!-- Suhu Card -->
-            <div class="metric-card rounded-xl p-5">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="text-gray-500 text-xs font-medium uppercase tracking-wider">TEMPERATURE</h3>
-                        <p id="temperatureValue" class="text-2xl font-semibold text-gray-800 mt-2">-- °C</p>
-                    </div>
-                    <div class="p-3 bg-red-50 rounded-xl">
-                        <i class="fas fa-thermometer-half text-red-400 text-lg"></i>
-                    </div>
-                </div>
-                <div class="flex items-center mt-4 text-xs text-gray-400">
-                    <i class="fas fa-clock mr-2"></i>
-                    <span>Updated: <span id="lastUpdateTemp">--</span></span>
-                </div>
-            </div>
 
-            <!-- Kelembapan Card -->
-            <div class="metric-card rounded-xl p-5">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="text-gray-500 text-xs font-medium uppercase tracking-wider">HUMIDITY</h3>
-                        <p id="humidityValue" class="text-2xl font-semibold text-gray-800 mt-2">-- %</p>
-                    </div>
-                    <div class="p-3 bg-blue-50 rounded-xl">
-                        <i class="fas fa-tint text-blue-400 text-lg"></i>
-                    </div>
-                </div>
-                <div class="flex items-center mt-4 text-xs text-gray-400">
-                    <i class="fas fa-clock mr-2"></i>
-                    <span>Updated: <span id="lastUpdateHumid">--</span></span>
-                </div>
+        <!-- Footer -->
+        <footer class="bg-white border-t border-gray-200 py-4 mt-8">
+            <div class="container mx-auto px-4 text-center">
+                <p class="text-gray-500 text-sm">AirMonitor &copy; 2023 - Environmental Monitoring System</p>
             </div>
-
-            <!-- Kualitas Udara Card -->
-            <div class="metric-card rounded-xl p-5">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="text-gray-500 text-xs font-medium uppercase tracking-wider">AIR QUALITY</h3>
-                        <p id="airQualityValue" class="text-2xl font-semibold text-gray-800 mt-2">--</p>
-                        <p id="airQualityCategory" class="text-xs font-medium mt-1 text-gray-500">--</p>
-                    </div>
-                    <div class="p-3 bg-green-50 rounded-xl">
-                        <i class="fas fa-wind text-green-400 text-lg"></i>
-                    </div>
-                </div>
-                <div class="flex items-center mt-4 text-xs text-gray-400">
-                    <i class="fas fa-clock mr-2"></i>
-                    <span>Updated: <span id="lastUpdateAir">--</span></span>
-                </div>
-            </div>
-
-            <!-- Kategori Udara Card -->
-            <div class="metric-card rounded-xl p-5">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="text-gray-500 text-xs font-medium uppercase tracking-wider">AIR STATUS</h3>
-                        <p id="kategoriValue" class="text-2xl font-semibold text-gray-800 mt-2">--</p>
-                        <p id="kategoriDescription" class="text-xs font-medium text-gray-500 mt-1">Waiting for data...</p>
-                    </div>
-                    <div class="p-3 bg-purple-50 rounded-xl" id="kategoriIcon">
-                        <i class="fas fa-wind text-purple-400 text-lg"></i>
-                    </div>
-                </div>
-                <div class="flex items-center mt-4 text-xs text-gray-400">
-                    <i class="fas fa-clock mr-2"></i>
-                    <span>Updated: <span id="lastKategoriUpdate">--</span></span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Charts Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-8">
-            <div class="glass-card rounded-xl p-5">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-sm font-semibold text-gray-700">Temperature History</h3>
-                    <i class="fas fa-thermometer-half text-gray-400"></i>
-                </div>
-                <div class="chart-container">
-                    <canvas id="temperatureChart"></canvas>
-                </div>
-            </div>
-            <div class="glass-card rounded-xl p-5">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-sm font-semibold text-gray-700">Humidity History</h3>
-                    <i class="fas fa-tint text-gray-400"></i>
-                </div>
-                <div class="chart-container">
-                    <canvas id="humidityChart"></canvas>
-                </div>
-            </div>
-            <div class="glass-card rounded-xl p-5">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-sm font-semibold text-gray-700">Air Quality History</h3>
-                    <i class="fas fa-wind text-gray-400"></i>
-                </div>
-                <div class="chart-container">
-                    <canvas id="airQualityChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- Statistics -->
-        <div class="glass-card rounded-xl p-5 mb-6">
-            <div class="flex items-center justify-between mb-5">
-                <h3 class="text-sm font-semibold text-gray-700">24-Hour Statistics</h3>
-                <i class="fas fa-chart-bar text-gray-400"></i>
-            </div>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4" id="statsContainer">
-                <div class="stat-card text-center p-4 rounded-lg">
-                    <div class="text-xl font-semibold text-gray-700">-- °C</div>
-                    <div class="text-xs text-gray-500 mt-1">Avg Temp</div>
-                </div>
-                <div class="stat-card text-center p-4 rounded-lg">
-                    <div class="text-xl font-semibold text-gray-700">-- %</div>
-                    <div class="text-xs text-gray-500 mt-1">Avg Humidity</div>
-                </div>
-                <div class="stat-card text-center p-4 rounded-lg">
-                    <div class="text-xl font-semibold text-gray-700">--</div>
-                    <div class="text-xs text-gray-500 mt-1">Avg Air Quality</div>
-                </div>
-                <div class="stat-card text-center p-4 rounded-lg">
-                    <div class="text-xl font-semibold text-gray-700">-- °C</div>
-                    <div class="text-xs text-gray-500 mt-1">Max Temp</div>
-                </div>
-                <div class="stat-card text-center p-4 rounded-lg">
-                    <div class="text-xl font-semibold text-gray-700">-- °C</div>
-                    <div class="text-xs text-gray-500 mt-1">Min Temp</div>
-                </div>
-                <div class="stat-card text-center p-4 rounded-lg">
-                    <div class="text-xl font-semibold text-gray-700">--</div>
-                    <div class="text-xs text-gray-500 mt-1">Max Air Quality</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Kategori Kualitas Udara -->
-        <div class="glass-card rounded-xl p-5 mb-6">
-            <div class="flex items-center justify-between mb-5">
-                <h3 class="text-sm font-semibold text-gray-700">Air Quality Categories</h3>
-                <i class="fas fa-info-circle text-gray-400"></i>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-white border border-gray-200 rounded-xl p-4 text-center transition-all hover:shadow-sm">
-                    <div class="w-3 h-3 bg-green-400 rounded-full mx-auto mb-3"></div>
-                    <div class="text-sm font-semibold text-gray-700">Good</div>
-                    <div class="text-xs text-gray-500 mt-1">0 - 400 pts</div>
-                </div>
-                <div class="bg-white border border-gray-200 rounded-xl p-4 text-center transition-all hover:shadow-sm">
-                    <div class="w-3 h-3 bg-yellow-400 rounded-full mx-auto mb-3"></div>
-                    <div class="text-sm font-semibold text-gray-700">Moderate</div>
-                    <div class="text-xs text-gray-500 mt-1">401 - 600 pts</div>
-                </div>
-                <div class="bg-white border border-gray-200 rounded-xl p-4 text-center transition-all hover:shadow-sm">
-                    <div class="w-3 h-3 bg-orange-400 rounded-full mx-auto mb-3"></div>
-                    <div class="text-sm font-semibold text-gray-700">High</div>
-                    <div class="text-xs text-gray-500 mt-1">601 - 800 pts</div>
-                </div>
-                <div class="bg-white border border-gray-200 rounded-xl p-4 text-center transition-all hover:shadow-sm">
-                    <div class="w-3 h-3 bg-red-400 rounded-full mx-auto mb-3"></div>
-                    <div class="text-sm font-semibold text-gray-700">Dangerous</div>
-                    <div class="text-xs text-gray-500 mt-1">801+ pts</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Loading State -->
-        <div id="loading" class="text-center py-8">
-            <div class="inline-flex items-center px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-200">
-                <i class="fas fa-spinner fa-spin text-gray-400 mr-2"></i>
-                <p class="text-gray-500 text-sm">Loading sensor data...</p>
-            </div>
-        </div>
-
-        <!-- Error State -->
-        <div id="error" class="hidden text-center py-8">
-            <div class="inline-block bg-white rounded-xl shadow-sm border border-gray-200 p-6 max-w-md">
-                <i class="fas fa-exclamation-triangle text-gray-400 text-2xl mb-4"></i>
-                <p class="text-gray-600 text-sm mb-4">Failed to load data. Please check sensor connection.</p>
-                <button onclick="loadData()" class="bg-gray-800 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-700 transition duration-200 flex items-center space-x-2 mx-auto text-sm">
-                    <i class="fas fa-redo text-xs"></i>
-                    <span>Try Again</span>
-                </button>
-            </div>
-        </div>
+        </footer>
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 py-4 mt-8">
-        <div class="container mx-auto px-4 text-center">
-            <p class="text-gray-500 text-sm">AirMonitor &copy; 2023 - Environmental Monitoring System</p>
-        </div>
-    </footer>
-
     <script>
+        // Kode JavaScript tetap sama seperti sebelumnya
+        // (tidak ada perubahan pada fungsionalitas)
+        
         let temperatureChart, humidityChart, airQualityChart;
         let updateInterval;
+
+        // Sidebar functionality
+        const desktopSidebar = document.getElementById('desktopSidebar');
+        const mobileSidebar = document.getElementById('mobileSidebar');
+        const mainContent = document.getElementById('mainContent');
+        const toggleSidebarBtn = document.getElementById('toggleSidebar');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const closeMobileMenu = document.getElementById('closeMobileMenu');
+
+        // Toggle desktop sidebar
+        toggleSidebarBtn.addEventListener('click', function() {
+            desktopSidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+            
+            const icon = toggleSidebarBtn.querySelector('i');
+            if (desktopSidebar.classList.contains('collapsed')) {
+                icon.className = 'fas fa-chevron-right text-gray-400 w-5 text-center';
+                toggleSidebarBtn.querySelector('.sidebar-item-text').textContent = 'Expand';
+            } else {
+                icon.className = 'fas fa-chevron-left text-gray-400 w-5 text-center';
+                toggleSidebarBtn.querySelector('.sidebar-item-text').textContent = 'Minimize';
+            }
+        });
+
+        // Mobile menu toggle
+        mobileMenuBtn.addEventListener('click', function() {
+            mobileSidebar.classList.add('mobile-open');
+        });
+
+        closeMobileMenu.addEventListener('click', function() {
+            mobileSidebar.classList.remove('mobile-open');
+        });
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!mobileSidebar.contains(event.target) && !mobileMenuBtn.contains(event.target)) {
+                mobileSidebar.classList.remove('mobile-open');
+            }
+        });
 
         // Check authentication
         const token = localStorage.getItem('token');
@@ -382,7 +603,7 @@
             const user = JSON.parse(localStorage.getItem('user') || '{}');
             document.getElementById('userWelcome').textContent += user.username;
             document.getElementById('userWelcome').classList.remove('hidden');
-            document.getElementById('mobileUserWelcome').textContent += user.username;
+            document.getElementById('mobileUserWelcome').textContent;
             
             // Load initial data
             loadData();
@@ -394,11 +615,6 @@
                 loadData();
             }, 5000);
         }
-
-        // Mobile menu toggle
-        document.getElementById('menuBtn').addEventListener('click', function() {
-            document.getElementById('sidebar').classList.toggle('open');
-        });
 
         // Logout function
         document.getElementById('logoutBtn').addEventListener('click', function() {
@@ -488,30 +704,30 @@
                 textColor = 'text-green-500';
                 iconClass = 'fas fa-check-circle';
                 description = 'Good Air Quality';
-                bgColor = 'bg-green-50';
+                bgColor = 'bg-gradient-to-br from-green-50 to-green-100';
             } else if (airQuality <= 600) {
                 // Sedang
                 textColor = 'text-yellow-500';
                 iconClass = 'fas fa-exclamation-triangle';
                 description = 'Moderate Air Quality';
-                bgColor = 'bg-yellow-50';
+                bgColor = 'bg-gradient-to-br from-yellow-50 to-yellow-100';
             } else if (airQuality <= 800) {
                 // Tinggi
                 textColor = 'text-orange-500';
                 iconClass = 'fas fa-exclamation-circle';
                 description = 'High Pollution';
-                bgColor = 'bg-orange-50';
+                bgColor = 'bg-gradient-to-br from-orange-50 to-orange-100';
             } else {
                 // Bahaya
                 textColor = 'text-red-500';
                 iconClass = 'fas fa-skull-crossbones';
                 description = 'Dangerous Levels';
-                bgColor = 'bg-red-50';
+                bgColor = 'bg-gradient-to-br from-red-50 to-red-100';
             }
 
             // Update content
             kategoriValue.textContent = category || '--';
-            kategoriValue.className = `text-2xl font-semibold ${textColor}`;
+            kategoriValue.className = `text-2xl font-bold ${textColor}`;
             kategoriDescription.textContent = description;
             kategoriDescription.className = `text-xs font-medium ${textColor}`;
             kategoriIcon.innerHTML = `<i class="${iconClass} ${textColor} text-lg"></i>`;
@@ -537,41 +753,11 @@
                 } else {
                     console.error('History load failed:', response.status);
                     // Jika gagal, gunakan data dummy untuk demo
-                    useDemoData();
                 }
             } catch (error) {
                 console.error('Error loading history:', error);
                 // Jika error, gunakan data dummy untuk demo
-                useDemoData();
             }
-        }
-
-        // Data demo untuk chart
-        function useDemoData() {
-            // Data suhu (dalam °C)
-            const temperatureData = [32.0, 31.5, 31.0, 30.5, 30.0, 29.5, 29.0, 28.5];
-            
-            // Data kelembapan (dalam %)
-            const humidityData = [65, 68, 70, 72, 75, 78, 80, 82];
-            
-            // Data kualitas udara (dalam pts)
-            const airQualityData = [150, 180, 220, 280, 350, 420, 500, 380];
-            
-            // Label waktu
-            const timeLabels = [];
-            const now = new Date();
-            for (let i = 7; i >= 0; i--) {
-                const time = new Date(now.getTime() - i * 30 * 60000);
-                timeLabels.push(time.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }));
-            }
-            
-            // Update charts dengan data demo
-            updateCharts({
-                temperatures: temperatureData,
-                humidities: humidityData,
-                airQualities: airQualityData,
-                labels: timeLabels
-            });
         }
 
         // Update charts
@@ -870,27 +1056,12 @@
                     console.log('Stats data:', result);
                     updateStats(result.stats);
                 } else {
-                    // Jika gagal, gunakan statistik dari data demo
-                    useDemoStats();
+                    
                 }
             } catch (error) {
                 console.error('Error loading stats:', error);
-                // Jika error, gunakan statistik dari data demo
-                useDemoStats();
+                
             }
-        }
-
-        // Statistik demo
-        function useDemoStats() {
-            const demoStats = {
-                avgTemperature: 30.4,
-                avgHumidity: 72.5,
-                avgAirQuality: 310,
-                maxTemperature: 32.0,
-                minTemperature: 28.5,
-                maxAirQuality: 500
-            };
-            updateStats(demoStats);
         }
 
         // Update statistics display
@@ -933,7 +1104,7 @@
 
             statsContainer.innerHTML = statsData.map(stat => `
                 <div class="stat-card text-center p-4 rounded-lg">
-                    <div class="text-xl font-semibold text-gray-700">${stat.value}</div>
+                    <div class="text-xl font-bold text-gray-700">${stat.value}</div>
                     <div class="text-xs text-gray-500 mt-1">${stat.label}</div>
                 </div>
             `).join('');
@@ -958,8 +1129,6 @@
             // Load demo data jika API tidak tersedia
             setTimeout(() => {
                 if (document.getElementById('loading').classList.contains('hidden') === false) {
-                    useDemoData();
-                    useDemoStats();
                     document.getElementById('loading').classList.add('hidden');
                     
                     // Update dashboard dengan data demo

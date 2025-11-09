@@ -6,6 +6,8 @@ require('dotenv').config();
 const { connectDB } = require('./config/database');
 const authRoutes = require('./routes/auth');
 const sensorRoutes = require('./routes/sensor');
+const userRoutes = require('./routes/user');
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -21,6 +23,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api', sensorRoutes);
+app.use('/api/user', userRoutes); // ✅ Tambahkan setelah routes lainnya
 
 // Serve frontend
 app.get('/', (req, res) => {

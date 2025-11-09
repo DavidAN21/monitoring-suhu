@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Monitoring Suhu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+        
+        .nav-blur {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+        }
+        
+        .sidebar {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 40;
+            background: linear-gradient(180deg, #1e293b 0%, #334155 100%);
+            color: white;
+        }
+        
+        .sidebar.collapsed {
+            width: 70px;
+        }
+        
+        .sidebar.collapsed .sidebar-item-text,
+        .sidebar.collapsed .sidebar-header-text,
+        .sidebar.collapsed .sidebar-section-text {
+            opacity: 0;
+            visibility: hidden;
+            width: 0;
+        }
+        
+        .sidebar.collapsed .sidebar-item {
+            justify-content: center;
+        }
+        
+        .main-content {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-left: 256px;
+        }
+        
+        .main-content.expanded {
+            margin-left: 70px;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0 !important;
+            }
+        }
+        
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #10B981;
+        }
+        
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #10B981;
+        }
+
+        /* Toast Notification Styles */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            max-width: 400px;
+        }
+
+        .toast {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-left: 4px solid;
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.3s ease-in-out;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast.hide {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+
+        .toast.success {
+            border-left-color: #10B981;
+        }
+
+        .toast.error {
+            border-left-color: #EF4444;
+        }
+
+        .toast.info {
+            border-left-color: #3B82F6;
+        }
+
+        .toast.warning {
+            border-left-color: #F59E0B;
+        }
+
+        .toast-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .toast.success .toast-icon {
+            color: #10B981;
+        }
+
+        .toast.error .toast-icon {
+            color: #EF4444;
+        }
+
+        .toast.info .toast-icon {
+            color: #3B82F6;
+        }
+
+        .toast.warning .toast-icon {
+            color: #F59E0B;
+        }
+
+        .toast-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: #1F2937;
+        }
+
+        .toast-message {
+            font-size: 14px;
+            color: #6B7280;
+            line-height: 1.4;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: #9CA3AF;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .toast-close:hover {
+            color: #6B7280;
+            background: #F3F4F6;
+        }
+
+        /* Enhanced Card Styles */
+        .settings-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(229, 231, 235, 0.8);
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .settings-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .settings-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .settings-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .sidebar-item {
+            transition: all 0.2s ease;
+            border-radius: 8px;
+            margin: 0 8px;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-item.active {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .gradient-text {
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            transition: all 0.3s ease;
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #059669, #047857);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #4b5563, #374151);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(107, 114, 128, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            transition: all 0.3s ease;
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.3);
+        }
+
+        .input-field {
+            transition: all 0.2s ease;
+            border: 1px solid #d1d5db;
+        }
+
+        .input-field:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .toggle-container:last-child {
+            border-bottom: none;
+        }
+
+        .toggle-content {
+            flex: 1;
+        }
+
+        .toggle-title {
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 2px;
+        }
+
+        .toggle-description {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        /* Enhanced Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #d1d5db;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        input:checked + .toggle-slider {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(30px);
+        }
+
+        input:focus + .toggle-slider {
+            box-shadow: 0 0 1px #10B981;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid rgba(229, 231, 235, 0.8);
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        }
+
+        .stat-card:hover {
+            border-color: rgba(156, 163, 175, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Desktop Sidebar -->
+    <div id="desktopSidebar" class="sidebar fixed inset-y-0 left-0 w-64 shadow-lg hidden md:flex flex-col">
+        <!-- Header -->
+        <div class="p-4 border-b border-gray-700">
+            <div class="flex items-center space-x-3 sidebar-header">
+                <div class="p-2 bg-gray-700 rounded-lg">
+                    <i class="fas fa-wind text-blue-300"></i>
+                </div>
+                <div class="sidebar-header-text text-lg font-semibold text-white">AirMonitor</div>
+            </div>
+        </div>
+        
+        <!-- Navigation Items -->
+        <div class="flex-1 py-4">
+            <div class="mb-6">
+                <div class="sidebar-section-text text-xs text-gray-400 mb-2 font-medium px-4">NAVIGATION</div>
+                <div class="space-y-1 px-3">
+                    <a href="dashboard.html" class="sidebar-item flex items-center p-3 rounded-lg text-gray-300 hover:text-white">
+                        <i class="fas fa-tachometer-alt text-gray-400 w-5 text-center"></i>
+                        <span class="sidebar-item-text">Dashboard</span>
+                    </a>
+                    <a href="settings.html" class="sidebar-item flex items-center p-3 rounded-lg bg-gray-700 text-white active">
+                        <i class="fas fa-cog text-blue-300 w-5 text-center"></i>
+                        <span class="sidebar-item-text font-medium">Settings</span>
+                    </a>
+                </div>
+            </div>
+            <div>
+                <div class="sidebar-section-text text-xs text-gray-400 mb-2 font-medium px-4">ACCOUNT</div>
+                <div class="space-y-1 px-3">
+                    <a href="profile.html" class="sidebar-item flex items-center p-3 rounded-lg text-gray-300 hover:text-white">
+                        <i class="fas fa-user text-gray-400 w-5 text-center"></i>
+                        <span class="sidebar-item-text">Profile</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Toggle Button -->
+        <div class="p-4 border-t border-gray-700">
+            <button id="toggleSidebar" class="sidebar-item flex items-center p-3 rounded-lg text-gray-300 hover:text-white w-full">
+                <i class="fas fa-chevron-left text-gray-400 w-5 text-center"></i>
+                <span class="sidebar-item-text font-medium">Minimize</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav-blur text-gray-800 sticky top-0 z-30">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-3">
+                    <button id="mobileMenuBtn" class="md:hidden text-gray-600">
+                        <i class="fas fa-bars text-lg"></i>
+                    </button>
+                    <div class="flex items-center space-x-3">
+                        <div class="text-xl font-semibold text-gray-800">AirMonitor</div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="userWelcome" class="user-welcome text-sm text-gray-600">
+                        Welcome,
+                    </span>
+
+                    <style>
+                    /* sembunyikan di mobile (<=767px) */
+                    @media (max-width: 667px) {
+                        .user-welcome { display: none !important; }
+                    }
+                    /* tampilkan di >=768px */
+                    @media (min-width: 668px) {
+                        .user-welcome { display: inline; }
+                    }
+                    </style>
+                    <button id="logoutBtn" class="text-white px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 rounded-lg font-medium hover:from-red-600 hover:to-red-700 transition duration-200 flex items-center space-x-2 shadow-sm">
+                        <i class="fas fa-sign-out-alt text-sm"></i>
+                        <span class="text-sm">Logout</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Sidebar -->
+    <div id="mobileSidebar" class="sidebar fixed inset-y-0 left-0 w-64 bg-gradient-to-b from-gray-800 to-gray-900 shadow-lg md:hidden flex flex-col">
+        <div class="p-4 border-b border-gray-700">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-gray-700 rounded-lg">
+                        <i class="fas fa-wind text-blue-300"></i>
+                    </div>
+                    <div class="text-lg font-semibold text-white">AirMonitor</div>
+                </div>
+                <button id="closeMobileMenu" class="text-gray-300 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="flex-1 overflow-y-auto py-4">
+            <div class="mb-6">
+                <div class="text-xs text-gray-400 mb-2 font-medium px-4">NAVIGATION</div>
+                <div class="space-y-1 px-3">
+                    <a href="dashboard.html" class="flex items-center space-x-3 p-3 rounded-lg text-gray-300 hover:text-white hover:bg-gray-700">
+                        <i class="fas fa-tachometer-alt text-gray-400"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="settings.html" class="flex items-center space-x-3 p-3 rounded-lg bg-gray-700 text-white">
+                        <i class="fas fa-cog text-blue-300"></i>
+                        <span class="font-medium">Settings</span>
+                    </a>
+                </div>
+            </div>
+            <div>
+                <div class="text-xs text-gray-400 mb-2 font-medium px-4">ACCOUNT</div>
+                <div class="space-y-1 px-3">
+                    <a href="profile.html" class="flex items-center space-x-3 p-3 rounded-lg text-gray-300 hover:text-white hover:bg-gray-700">
+                        <i id="mobileUserWelcome" class="fas fa-user text-gray-400"></i>
+                        <span>Profile</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="mainContent" class="main-content min-h-screen">
+        <div class="container mx-auto px-4 py-6">
+            <div class="mb-6 fade-in">
+                <h1 class="text-2xl font-bold text-gray-800">Settings</h1>
+                <p class="text-gray-500 text-sm mt-1">Manage your monitoring system preferences</p>
+            </div>
+
+            <!-- Settings Sections -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Column -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Data Management -->
+                    <div class="settings-card rounded-xl p-6 fade-in">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-semibold text-gray-800">Data Management</h3>
+                            <i class="fas fa-database text-blue-400"></i>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Data Retention Period</label>
+                                <select id="dataRetention" class="w-full px-3 py-2 input-field rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    <option value="30">30 days</option>
+                                    <option value="90" selected>90 days</option>
+                                    <option value="180">180 days</option>
+                                    <option value="365">1 year</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Auto Refresh Interval</label>
+                                <select id="refreshInterval" class="w-full px-3 py-2 input-field rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    <option value="5000">5 seconds</option>
+                                    <option value="10000" selected>10 seconds</option>
+                                    <option value="30000">30 seconds</option>
+                                    <option value="60000">1 minute</option>
+                                </select>
+                            </div>
+                            <div class="flex space-x-3 pt-2">
+                                <button onclick="exportData()" class="flex-1 btn-primary text-white py-2 px-4 rounded-lg font-medium flex items-center justify-center space-x-2">
+                                    <i class="fas fa-download text-sm"></i>
+                                    <span>Export Data</span>
+                                </button>
+                                <button onclick="clearOldData()" class="flex-1 btn-danger text-white py-2 px-4 rounded-lg font-medium flex items-center justify-center space-x-2">
+                                    <i class="fas fa-trash text-sm"></i>
+                                    <span>Clear Old Data</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Display Settings -->
+                    <div class="settings-card rounded-xl p-6 fade-in">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-semibold text-gray-800">Display Settings</h3>
+                            <i class="fas fa-palette text-blue-400"></i>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Theme</label>
+                                <select id="theme" class="w-full px-3 py-2 input-field rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    <option value="light">Light</option>
+                                    <option value="dark">Dark</option>
+                                    <option value="auto">Auto (System)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Temperature Unit</label>
+                                <select id="temperatureUnit" class="w-full px-3 py-2 input-field rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    <option value="celsius">Celsius (°C)</option>
+                                    <option value="fahrenheit">Fahrenheit (°F)</option>
+                                </select>
+                            </div>
+                            <div class="toggle-container">
+                                <div class="toggle-content">
+                                    <div class="toggle-title">Compact Mode</div>
+                                    <div class="toggle-description">Show more data in less space</div>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="compactMode">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="toggle-container">
+                                <div class="toggle-content">
+                                    <div class="toggle-title">Show Charts</div>
+                                    <div class="toggle-description">Display charts on dashboard</div>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="showCharts" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="toggle-container">
+                                <div class="toggle-content">
+                                    <div class="toggle-title">Notifications</div>
+                                    <div class="toggle-description">Receive system notifications</div>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="notifications" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="space-y-6">
+                    <!-- System Info -->
+                    <div class="settings-card rounded-xl p-6 fade-in">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-800">System Information</h3>
+                            <i class="fas fa-info-circle text-blue-400"></i>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">System Version</span>
+                                <span class="text-sm font-medium text-gray-800" id="systemVersion">v2.1.0</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Last Update</span>
+                                <span class="text-sm font-medium text-gray-800" id="lastSystemUpdate">2024-01-15</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Sensors Connected</span>
+                                <span class="text-sm font-medium text-green-600" id="sensorsConnected">1/1</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Database Size</span>
+                                <span class="text-sm font-medium text-gray-800" id="databaseSize">2.4 MB</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Save Settings -->
+                    <div class="settings-card rounded-xl p-6 fade-in">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Save Changes</h3>
+                        <p class="text-sm text-gray-600 mb-4">Apply your settings changes to the system</p>
+                        <div class="space-y-3">
+                            <button onclick="saveSettings()" class="w-full btn-success text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center space-x-2">
+                                <i class="fas fa-save text-sm"></i>
+                                <span>Save All Settings</span>
+                            </button>
+                            <button onclick="resetSettings()" class="w-full btn-secondary text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center space-x-2">
+                                <i class="fas fa-undo text-sm"></i>
+                                <span>Reset to Default</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="bg-white border-t border-gray-200 py-4 mt-8">
+            <div class="container mx-auto px-4 text-center">
+                <p class="text-gray-500 text-sm">AirMonitor &copy; 2024 - Environmental Monitoring System</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script>
+        // Toast Notification System
+        class ToastManager {
+            constructor() {
+                this.container = document.getElementById('toastContainer');
+                this.toasts = new Set();
+            }
+
+            show(message, type = 'info', title = null, duration = 5000) {
+                // Auto-generate title based on type
+                if (!title) {
+                    title = this.getTitleFromType(type);
+                }
+
+                const toast = this.createToast(message, type, title);
+                this.container.appendChild(toast);
+                this.toasts.add(toast);
+
+                // Animate in
+                requestAnimationFrame(() => {
+                    toast.classList.add('show');
+                });
+
+                // Auto remove after duration
+                if (duration > 0) {
+                    setTimeout(() => {
+                        this.removeToast(toast);
+                    }, duration);
+                }
+
+                return toast;
+            }
+
+            getTitleFromType(type) {
+                const titles = {
+                    success: 'Success',
+                    error: 'Error',
+                    info: 'Information',
+                    warning: 'Warning'
+                };
+                return titles[type] || 'Notification';
+            }
+
+            createToast(message, type, title) {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                
+                const icon = this.getIconFromType(type);
+                
+                toast.innerHTML = `
+                    <div class="toast-icon">
+                        <i class="fas ${icon}"></i>
+                    </div>
+                    <div class="toast-content">
+                        <div class="toast-title">${title}</div>
+                        <div class="toast-message">${message}</div>
+                    </div>
+                    <button class="toast-close" onclick="toastManager.removeToast(this.parentElement)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+
+                return toast;
+            }
+
+            getIconFromType(type) {
+                const icons = {
+                    success: 'fa-check-circle',
+                    error: 'fa-exclamation-circle',
+                    info: 'fa-info-circle',
+                    warning: 'fa-exclamation-triangle'
+                };
+                return icons[type] || 'fa-info-circle';
+            }
+
+            removeToast(toast) {
+                if (!this.toasts.has(toast)) return;
+
+                toast.classList.remove('show');
+                toast.classList.add('hide');
+
+                // Remove from DOM after animation
+                setTimeout(() => {
+                    if (toast.parentElement) {
+                        toast.parentElement.removeChild(toast);
+                    }
+                    this.toasts.delete(toast);
+                }, 300);
+            }
+
+            clearAll() {
+                this.toasts.forEach(toast => {
+                    this.removeToast(toast);
+                });
+            }
+        }
+
+        // Initialize toast manager
+        const toastManager = new ToastManager();
+
+        // Show message function (compatible with existing code)
+        function showMessage(message, type = 'info', title = null, duration = 5000) {
+            return toastManager.show(message, type, title, duration);
+        }
+
+        // Check authentication
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login';
+        } else {
+            // Tampilkan username
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            document.getElementById('userWelcome').textContent += user.username;
+            document.getElementById('userWelcome').classList.remove('hidden');
+            document.getElementById('mobileUserWelcome').textContent;
+            
+            // Load settings dari server
+            loadSettings();
+        }
+
+        // Logout function
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+        });
+
+        // Load settings from server
+        async function loadSettings() {
+            try {
+                const response = await fetch('/api/user/settings', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    const settings = result.settings || {};
+                    
+                    // Display settings
+                    document.getElementById('theme').value = settings.theme || 'light';
+                    document.getElementById('temperatureUnit').value = settings.temperatureUnit || 'celsius';
+                    document.getElementById('compactMode').checked = settings.compactMode || false;
+                    document.getElementById('showCharts').checked = settings.showCharts !== false;
+                    document.getElementById('notifications').checked = settings.notifications !== false;
+                    
+                    // Data management
+                    document.getElementById('dataRetention').value = settings.dataRetention || 90;
+                    document.getElementById('refreshInterval').value = settings.refreshInterval || 10000;
+                } else {
+                    throw new Error('Failed to load settings');
+                }
+            } catch (error) {
+                console.log('Using default settings:', error.message);
+                // Use default settings if server fails
+                loadDefaultSettings();
+            }
+        }
+
+        function loadDefaultSettings() {
+            document.getElementById('theme').value = 'light';
+            document.getElementById('temperatureUnit').value = 'celsius';
+            document.getElementById('compactMode').checked = false;
+            document.getElementById('showCharts').checked = true;
+            document.getElementById('notifications').checked = true;
+            document.getElementById('dataRetention').value = 90;
+            document.getElementById('refreshInterval').value = 10000;
+        }
+
+        // Save settings to server
+        async function saveSettings() {
+            const settings = {
+                theme: document.getElementById('theme').value,
+                temperatureUnit: document.getElementById('temperatureUnit').value,
+                compactMode: document.getElementById('compactMode').checked,
+                showCharts: document.getElementById('showCharts').checked,
+                notifications: document.getElementById('notifications').checked,
+                dataRetention: parseInt(document.getElementById('dataRetention').value),
+                refreshInterval: parseInt(document.getElementById('refreshInterval').value),
+                lastUpdated: new Date().toISOString()
+            };
+
+            try {
+                showMessage('Saving settings...', 'info', 'Saving', 2000);
+                
+                const response = await fetch('/api/user/settings', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    showMessage(result.message || 'Settings saved successfully!', 'success', 'Success');
+                } else {
+                    throw new Error('Failed to save settings');
+                }
+            } catch (error) {
+                showMessage('Error saving settings: ' + error.message, 'error', 'Error');
+            }
+        }
+
+        // Reset settings to default
+        function resetSettings() {
+            if (confirm('Are you sure you want to reset all settings to default?')) {
+                loadDefaultSettings();
+                showMessage('Settings reset to default!', 'success', 'Success');
+            }
+        }
+
+        // Export data function
+        async function exportData() {
+            try {
+                showMessage('Preparing data export...', 'info', 'Exporting', 3000);
+                
+                const response = await fetch('/api/user/export-data?limit=1000', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    const dataStr = JSON.stringify(result.data, null, 2);
+                    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                    
+                    const url = URL.createObjectURL(dataBlob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `sensor-data-${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                    
+                    showMessage('Data exported successfully!', 'success', 'Export Complete');
+                } else {
+                    throw new Error('Failed to export data');
+                }
+            } catch (error) {
+                showMessage('Failed to export data: ' + error.message, 'error', 'Export Failed');
+            }
+        }
+
+        // Clear old data function
+        async function clearOldData() {
+            const retentionDays = parseInt(document.getElementById('dataRetention').value);
+            
+            if (confirm(`Are you sure you want to clear data older than ${retentionDays} days? This action cannot be undone.`)) {
+                try {
+                    showMessage('Clearing old data...', 'info', 'Clearing Data', 0);
+                    
+                    const response = await fetch('/api/user/clear-old-data', {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ days: retentionDays })
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        showMessage(result.message, 'success', 'Data Cleared');
+                    } else {
+                        const error = await response.json();
+                        throw new Error(error.message || 'Failed to clear old data');
+                    }
+                } catch (error) {
+                    showMessage('Failed to clear old data: ' + error.message, 'error', 'Error');
+                }
+            }
+        }
+
+        // Sidebar functionality
+        const desktopSidebar = document.getElementById('desktopSidebar');
+        const mobileSidebar = document.getElementById('mobileSidebar');
+        const mainContent = document.getElementById('mainContent');
+        const toggleSidebarBtn = document.getElementById('toggleSidebar');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const closeMobileMenu = document.getElementById('closeMobileMenu');
+
+        // Toggle desktop sidebar
+        toggleSidebarBtn.addEventListener('click', function() {
+            desktopSidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+            
+            const icon = toggleSidebarBtn.querySelector('i');
+            if (desktopSidebar.classList.contains('collapsed')) {
+                icon.className = 'fas fa-chevron-right text-gray-400 w-5 text-center';
+                toggleSidebarBtn.querySelector('.sidebar-item-text').textContent = 'Expand';
+            } else {
+                icon.className = 'fas fa-chevron-left text-gray-400 w-5 text-center';
+                toggleSidebarBtn.querySelector('.sidebar-item-text').textContent = 'Minimize';
+            }
+        });
+
+        // Mobile menu toggle
+        mobileMenuBtn.addEventListener('click', function() {
+            mobileSidebar.classList.add('mobile-open');
+        });
+
+        closeMobileMenu.addEventListener('click', function() {
+            mobileSidebar.classList.remove('mobile-open');
+        });
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!mobileSidebar.contains(event.target) && !mobileMenuBtn.contains(event.target)) {
+                mobileSidebar.classList.remove('mobile-open');
+            }
+        });
+
+        // Initialize settings on load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
+        });
+    </script>
+</body>
+</html>
