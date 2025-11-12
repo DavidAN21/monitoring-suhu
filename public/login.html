@@ -1,67 +1,286 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Monitoring Suhu</title>
+    <title>Login - Air Quality Monitoring</title>
     <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center">
-    <div class="bg-white p-8 rounded-lg shadow-md w-96">
-        <h2 class="text-2xl font-bold text-center mb-6 text-blue-600">Login</h2>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+        }
+        
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+        }
+        
+        .input-field {
+            transition: all 0.2s ease;
+            border: 1px solid #d1d5db;
+        }
+        
+        .input-field:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.8s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .toast {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-left: 4px solid;
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: all 0.3s ease-in-out;
+        }
+        
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .toast.success {
+            border-left-color: #10B981;
+        }
+        
+        .toast.error {
+            border-left-color: #EF4444;
+        }
+        
+        .password-toggle {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            color: #6b7280;
+        }
+        
+        .password-toggle:hover {
+            color: #374151;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="login-card p-8 w-full max-w-md fade-in">
+        <!-- Logo and Header -->
+        <div class="text-center mb-8">
+            <div class="floating mb-4">
+                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg">
+                    <i class="fas fa-wind text-white text-2xl"></i>
+                </div>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">
+                Welcome to <span class="gradient-text">AirMonitor</span>
+            </h1>
+            <p class="text-gray-600">Sign in to your account</p>
+        </div>
+        
+        <!-- Login Form -->
         <form id="loginForm">
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="email">
-                    Email
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-semibold mb-2" for="email">
+                    Email Address
                 </label>
-                <input 
-                    type="email" 
-                    id="email" 
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Masukkan email"
-                    required
-                >
+                <div class="relative">
+                    <input 
+                        type="email" 
+                        id="email" 
+                        class="w-full px-4 py-3 input-field rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pl-10"
+                        placeholder="Enter your email"
+                        required
+                    >
+                    <i class="fas fa-envelope absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
             </div>
             
             <div class="mb-6">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="password">
+                <label class="block text-gray-700 text-sm font-semibold mb-2" for="password">
                     Password
                 </label>
-                <input 
-                    type="password" 
-                    id="password" 
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Masukkan password"
-                    required
-                >
+                <div class="relative">
+                    <input 
+                        type="password" 
+                        id="password" 
+                        class="w-full px-4 py-3 input-field rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pl-10 pr-10"
+                        placeholder="Enter your password"
+                        required
+                    >
+                    <i class="fas fa-lock absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <button 
+                        type="button" 
+                        id="togglePassword" 
+                        class="password-toggle absolute right-3 top-1/2 transform -translate-y-1/2"
+                    >
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="flex items-center justify-between mb-6">
+                <label class="flex items-center">
+                    <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                    <span class="ml-2 text-sm text-gray-600">Remember me</span>
+                </label>
+                <a href="/forgot-password" class="text-sm text-blue-600 hover:text-blue-800 hover:underline">
+                    Forgot password?
+                </a>
             </div>
             
             <button 
                 type="submit" 
-                class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+                class="w-full btn-primary text-white py-3 px-4 rounded-lg font-semibold text-lg transition duration-200 flex items-center justify-center space-x-2"
+                id="loginButton"
             >
-                Login
+                <i class="fas fa-sign-in-alt"></i>
+                <span>Sign In</span>
             </button>
         </form>
         
-        <div class="text-center mt-4">
+        <!-- Divider -->
+        <div class="relative flex items-center my-6">
+            <div class="flex-grow border-t border-gray-300"></div>
+            <span class="flex-shrink mx-4 text-gray-500 text-sm">or</span>
+            <div class="flex-grow border-t border-gray-300"></div>
+        </div>
+        
+        <!-- Register Link -->
+        <div class="text-center">
             <p class="text-gray-600">
-                Belum punya akun? 
-                <a href="/register" class="text-blue-600 hover:underline">Daftar di sini</a>
+                Don't have an account? 
+                <a href="/register" class="text-blue-600 font-semibold hover:text-blue-800 hover:underline transition duration-200">
+                    Create one here
+                </a>
             </p>
         </div>
 
-        <div id="message" class="mt-4 text-center hidden"></div>
+        <!-- Toast Message -->
+        <div id="toast" class="toast mt-4 hidden">
+            <div class="flex items-center">
+                <i id="toastIcon" class="fas fa-info-circle text-lg mr-3"></i>
+                <div class="flex-1">
+                    <p id="toastMessage" class="text-sm font-medium"></p>
+                </div>
+                <button onclick="hideToast()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
     </div>
 
     <script>
+        // Password visibility toggle
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        
+        togglePassword.addEventListener('click', function() {
+            // Toggle the type attribute
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // Toggle the eye icon
+            const icon = this.querySelector('i');
+            if (type === 'password') {
+                icon.className = 'fas fa-eye';
+                this.setAttribute('aria-label', 'Show password');
+            } else {
+                icon.className = 'fas fa-eye-slash';
+                this.setAttribute('aria-label', 'Hide password');
+            }
+        });
+
+        // Redirect to dashboard if already logged in
+        const token = localStorage.getItem('token');
+        if (token) {
+            window.location.href = '/dashboard';
+        }
+
+        // Toast notification functions
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastIcon = document.getElementById('toastIcon');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            // Set toast style and content
+            toast.className = `toast mt-4 ${type} show`;
+            toastMessage.textContent = message;
+            
+            // Set icon based on type
+            const icons = {
+                success: 'fa-check-circle text-green-500',
+                error: 'fa-exclamation-circle text-red-500',
+                info: 'fa-info-circle text-blue-500'
+            };
+            toastIcon.className = `fas ${icons[type] || icons.info} text-lg mr-3`;
+            
+            // Auto hide after 5 seconds
+            setTimeout(hideToast, 5000);
+        }
+
+        function hideToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.remove('show');
+            setTimeout(() => {
+                toast.className = 'toast mt-4 hidden';
+            }, 300);
+        }
+
+        // Login form handler
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const messageDiv = document.getElementById('message');
+            const loginButton = document.getElementById('loginButton');
+            
+            // Show loading state
+            const originalContent = loginButton.innerHTML;
+            loginButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Signing in...</span>';
+            loginButton.disabled = true;
             
             try {
                 const response = await fetch('/api/auth/login', {
@@ -75,31 +294,44 @@
                 const data = await response.json();
                 
                 if (response.ok) {
-                    // Simpan token di localStorage
+                    // Save token and user data
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('user', JSON.stringify(data.user));
                     
-                    messageDiv.className = 'mt-4 text-center text-green-600';
-                    messageDiv.textContent = 'Login berhasil! Mengarahkan ke dashboard...';
+                    showToast('Login successful! Redirecting to dashboard...', 'success');
                     
                     setTimeout(() => {
                         window.location.href = '/dashboard';
-                    }, 1000);
+                    }, 1500);
                 } else {
-                    messageDiv.className = 'mt-4 text-center text-red-600';
-                    messageDiv.textContent = data.message || 'Login gagal!';
+                    showToast(data.message || 'Login failed. Please check your credentials.', 'error');
+                    
+                    // Reset button
+                    loginButton.innerHTML = originalContent;
+                    loginButton.disabled = false;
                 }
             } catch (error) {
-                messageDiv.className = 'mt-4 text-center text-red-600';
-                messageDiv.textContent = 'Terjadi error saat login';
+                console.error('Login error:', error);
+                showToast('Network error. Please try again.', 'error');
+                
+                // Reset button
+                loginButton.innerHTML = originalContent;
+                loginButton.disabled = false;
             }
         });
 
-        // Redirect ke dashboard jika sudah login
-        const token = localStorage.getItem('token');
-        if (token) {
-            window.location.href = '/dashboard';
-        }
+        // Add input validation styling
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', function() {
+                if (this.value) {
+                    this.classList.add('border-green-400');
+                } else {
+                    this.classList.remove('border-green-400');
+                }
+            });
+        });
+
+        
     </script>
 </body>
 </html>
